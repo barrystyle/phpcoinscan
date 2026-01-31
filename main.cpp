@@ -1,4 +1,5 @@
 #include <iostream>
+#include "db.h"
 #include "mtrand.h"
 #include "keyfuncs.h"
 #include <cstring>
@@ -11,6 +12,9 @@ int main()
 
     z = 0;
 
+    //load addr into mem
+    initdb();
+
     while (1){
 
         //calculate private key
@@ -22,7 +26,11 @@ int main()
 
         //get public key
         derive_keys(privbytes, result);
-        printf("%d - %s\n", z, result.wif_uncompressed_pubkey.c_str());
+        printf("\r%d - %s", z, result.wif_uncompressed_pubkey.c_str());
+
+        if (searchaddress(result.wif_uncompressed_pubkey) > 0) {
+            printf("\n%d - %s\n FOUND\n", z, result.wif_uncompressed_pubkey.c_str());
+        }
 
         z++;
     }
