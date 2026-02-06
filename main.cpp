@@ -4,18 +4,15 @@
 #include "keyfuncs.h"
 #include <cstring>
 
-int main()
+#define max_thr 4
+
+void search_thread(int thr_id)
 {
-    int z;
+    int z = (std::numeric_limits<int>::max() / max_thr) * thr_id;
     PhpMtRand rng;
     pairSet result;
 
-    z = 0;
-
-    //load addr into mem
-    initdb();
-
-    while (1){
+    while (1) {
 
         //calculate private key
         rng.srand(z);
@@ -26,7 +23,7 @@ int main()
 
         //get public key
         derive_keys(privbytes, result);
-        printf("\r%d - %s", z, result.wif_uncompressed_pubkey.c_str());
+        printf("\033[%d;0H %d - %s", thr_id+1, z, result.wif_uncompressed_pubkey.c_str());
 
         if (searchaddress(result.wif_uncompressed_pubkey) > 0) {
             printf("\n%d - %s\n FOUND\n", z, result.wif_uncompressed_pubkey.c_str());
@@ -34,5 +31,25 @@ int main()
 
         z++;
     }
+}
 
+int main()
+{
+    //load addr into mem
+    initdb();
+
+    //threads
+    std::vector<std::thread> search_threads;
+    for (int i=0; i<max_thr; i++) {
+        search_threads.push_back(std::thread(search_thread, i));
+    }
+
+    //wait
+    for (int i=0; i<max_thr; i++) {
+        if (search_threads[i].joinable()) {
+            search_threads[i].join();
+        }
+    }
+
+    return 1;
 }
