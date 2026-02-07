@@ -2,9 +2,11 @@
 #include "db.h"
 #include "mtrand.h"
 #include "keyfuncs.h"
+#include <unistd.h>
 #include <cstring>
 
-#define max_thr 4
+#define max_thr 6
+int progress[max_thr];
 
 void search_thread(int thr_id)
 {
@@ -23,13 +25,27 @@ void search_thread(int thr_id)
 
         //get public key
         derive_keys(privbytes, result);
-        printf("\033[%d;0H %d - %s", thr_id+1, z, result.wif_uncompressed_pubkey.c_str());
+        progress[thr_id] = z;
+        //printf("\033[%d;0H %d - %s", thr_id+1, z, result.wif_uncompressed_pubkey.c_str());
 
         if (searchaddress(result.wif_uncompressed_pubkey) > 0) {
             printf("\n%d - %s\n FOUND\n", z, result.wif_uncompressed_pubkey.c_str());
         }
 
-        z++;
+        z--;
+    }
+}
+
+void progress_thread()
+{
+    while (1) {
+
+        for (int i=0; i<max_thr; i++) {
+            printf("thr%02d: %10d | ", i, progress[i]);
+        }
+        printf("\n");
+        sleep(5);
+
     }
 }
 
@@ -43,9 +59,12 @@ int main()
     for (int i=0; i<max_thr; i++) {
         search_threads.push_back(std::thread(search_thread, i));
     }
+    search_threads.push_back(std::thread(progress_thread));
+
+    printf("");
 
     //wait
-    for (int i=0; i<max_thr; i++) {
+    for (int i=0; i<max_thr+1; i++) {
         if (search_threads[i].joinable()) {
             search_threads[i].join();
         }
