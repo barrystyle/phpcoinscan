@@ -8,13 +8,17 @@ void worker(int thr_id, int start, int end)
 {
     printf("thread %d (%d->%d)\n", thr_id, start, end);
 
+    const char *delim = "	";
+
     int position = start;
     while (position < end) {
         uint64_t val;
-        std::string key, vals;
+        char *key;
+        std::string keys, vals;
         std::stringstream ss(balances[position]);
-        std::getline(ss, key, ' ');
+        std::getline(ss, keys, ' ');
         std::getline(ss, vals, ' ');
+        key = strtok((char*)keys.c_str(), delim);
         val = strtol(vals.c_str(), NULL, 10); 
         addressMap.write(key, val);
         ++position;
