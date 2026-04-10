@@ -16,7 +16,7 @@ void worker(int thr_id, int start, int end)
         char *key;
         std::string keys, vals;
         std::stringstream ss(balances[position]);
-        std::getline(ss, keys, ' ');
+        std::getline(ss, keys, *delim);
         std::getline(ss, vals, ' ');
         key = strtok((char*)keys.c_str(), delim);
         val = strtol(vals.c_str(), NULL, 10); 
